@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Technical Summary — Drug Arrests by Sex &amp; Age Data Warehouse</title>
+<style>
+  :root {
+    --bg: #0b1120; --panel: #111a2e; --panel2: #0f172a; --border: #233047;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --green: #4ade80;
+    --amber: #fbbf24; --red: #f87171; --violet: #a78bfa; --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 22px 80px; }
+  a { color: var(--accent); }
+
+  /* ---------- Header ---------- */
+  .hero { background: radial-gradient(1200px 400px at 20% -10%, #1e3a5f 0%, transparent 60%),
+          linear-gradient(180deg, #0d1830, var(--bg)); border-bottom: 1px solid var(--border); padding: 56px 22px 44px; text-align: center; }
+  .hero h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: -0.02em; }
+  .hero h1 span { color: var(--accent); }
+  .hero .sub { color: var(--muted); max-width: 720px; margin: 0 auto 22px; }
+  .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .badge { font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); }
+  .badge.d { color: #ff6b4a; border-color: #4a2a22; } .badge.k { color: #4ade80; border-color: #1e3a2a; }
+  .badge.p { color: #ffd43b; border-color: #3a3316; } .badge.f { color: #38bdf8; border-color: #16303f; }
+  .badge.g { color: #e2e8f0; border-color: #233047; }
+  .hero .link { margin-top: 16px; font-size: 13px; }
+
+  /* ---------- Sections ---------- */
+  h2 { font-size: 22px; margin: 56px 0 6px; display: flex; align-items: center; gap: 12px; }
+  h2 .num { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px;
+            background: linear-gradient(135deg, #0ea5e9, #6366f1); color: #fff; font-size: 16px; font-weight: 700; flex: none; }
+  .subtitle { color: var(--muted); font-size: 14px; margin: 0 0 22px 46px; }
+  h3 { font-size: 16px; margin: 26px 0 8px; color: #cbd5e1; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .card h4 { margin: 0 0 6px; font-size: 15px; }
+  .card p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .card .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 6px; padding: 2px 8px; margin-bottom: 8px; letter-spacing: .04em; }
+  .t-amber { background: #3a3316; color: var(--amber); } .t-green { background: #1e3a2a; color: var(--green); }
+  .t-blue { background: #16303f; color: var(--accent); } .t-violet { background: #2e2450; color: var(--violet); }
+
+  /* ---------- Flow diagram ---------- */
+  .flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; padding: 22px 10px; }
+  .fbox { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; min-width: 150px; text-align: center; }
+  .fbox .l1 { font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+  .fbox .l2 { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .fbox.b { border-color: #5b4a1e; } .fbox.b .l1 { color: var(--amber); }
+  .fbox.s { border-color: #35502f; } .fbox.s .l1 { color: var(--green); }
+  .fbox.g { border-color: #24445e; } .fbox.g .l1 { color: var(--accent); }
+  .fbox.u { border-color: #42345c; } .fbox.u .l1 { color: var(--violet); }
+  .arrow { color: var(--muted); font-size: 18px; }
+  .flow-note { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+
+  /* ---------- Code blocks ---------- */
+  .code { position: relative; margin: 12px 0; }
+  .code pre { background: #0a0f1d; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+              overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.55; margin: 0; color: #a5f3fc; }
+  .code .lang { position: absolute; top: 8px; right: 44px; font-size: 10px; letter-spacing: .1em; color: #64748b; text-transform: uppercase; }
+  .copy { position: absolute; top: 6px; right: 6px; background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+          border-radius: 7px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .copy:hover { color: var(--accent); border-color: var(--accent); }
+  .copy.done { color: var(--green); border-color: var(--green); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+  th { text-align: left; background: #182338; color: #cbd5e1; padding: 9px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  td { padding: 9px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #0e1628; }
+  code.inline { background: #182338; border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font-family: var(--mono); font-size: 12px; color: #a5f3fc; }
+
+  ul.tight { padding-left: 20px; margin: 8px 0; }
+  ul.tight li { margin: 5px 0; font-size: 13.5px; }
+
+  /* ---------- Steps timeline ---------- */
+  .steps { list-style: none; padding: 0; margin: 0; counter-reset: step; }
+  .steps > li { position: relative; padding: 0 0 26px 52px; counter-increment: step; }
+  .steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, #0ea5e9, #6366f1); color: #fff; font-weight: 700; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; }
+  .steps > li::after { content: ""; position: absolute; left: 15px; top: 36px; bottom: 4px; width: 2px; background: var(--border); }
+  .steps > li:last-child::after { display: none; }
+  .steps h4 { margin: 4px 0 2px; font-size: 15px; }
+  .steps .desc { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+
+  .note { border-left: 3px solid var(--amber); background: #1c1826; padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: 13px; margin: 12px 0; color: #e7d9b8; }
+  .note.ok { border-color: var(--green); background: #13231b; color: #c4e8d0; }
+  .note.err { border-color: var(--red); background: #2a1418; color: #f2c4c4; }
+  .note b { color: #fff; }
+
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 10px; margin-right: 6px; border: 1px solid var(--border); }
+  .pill.g { color: var(--green); } .pill.r { color: var(--red); } .pill.y { color: var(--amber); }
+
+  footer { text-align: center; color: #475569; font-size: 12.5px; margin-top: 60px; border-top: 1px solid var(--border); padding-top: 24px; }
+  @media (max-width: 640px) { .hero h1 { font-size: 26px; } h2 .num { width: 30px; height: 30px; } .subtitle { margin-left: 42px; } }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Technical Summary — <span>Drug Arrests by Sex &amp; Age Data Warehouse</span></h1>
+  <p class="sub">A complete, free, open-source data warehouse built using a medallion architecture (bronze → silver → gold), powered by dbt-core and DuckDB, sourcing live data from the Malaysian government open-data portal. This document records the full project flow, the stack, exact setup &amp; usage steps — and doubles as a reusable playbook to rebuild the same pipeline for any dataset.</p>
+  <div class="badges">
+    <span class="badge d">dbt-core + dbt-duckdb</span>
+    <span class="badge k">DuckDB</span>
+    <span class="badge p">Python 3</span>
+    <span class="badge f">Flask</span>
+    <span class="badge g">Git / GitHub</span>
+    <span class="badge g">data.gov.my Open API</span>
+  </div>
+  <div class="link">Source dataset: <a href="https://api.data.gov.my/data-catalogue/?id=drug_arrests_age">data.gov.my — Drug Arrests by Sex &amp; Age (catalogue ID <code>drug_arrests_age</code>)</a></div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ 1. PROJECT FLOW ============ -->
+<h2><span class="num">1</span> Project Flow</h2>
+<p class="subtitle">How data moves from the government API to queryable, tested analytics tables</p>
+
+<div class="card">
+  <div class="flow">
+    <div class="fbox"><div class="l1">SOURCE</div><div class="l2">data.gov.my API</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox b"><div class="l1">BRONZE</div><div class="l2">scripts/ingest.py</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox s"><div class="l1">SILVER</div><div class="l2">stg_drug_arrests_age</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox g"><div class="l1">GOLD</div><div class="l2">fact + dims</div></div>
+    <div class="arrow">→</div>
+    <div class="fbox u"><div class="l1">CONSUME</div><div class="l2">Web UI / queries</div></div>
+  </div>
+  <div class="flow-note">API → <code class="inline">bronze.drug_arrests_age_raw</code> → <code class="inline">main_silver.stg_drug_arrests_age</code> → <code class="inline">main_gold.fact_drug_arrests</code> + <code class="inline">dim_age_group</code> + <code class="inline">dim_sex</code> + <code class="inline">dim_arrest_type</code> → SQL editor on localhost:5000</div>
+  <table>
+    <tr><th>Step</th><th>Tool</th><th>What happens</th><th>Output</th></tr>
+    <tr><td>1. Ingest</td><td>Python + DuckDB</td><td>Fetches the full dataset from the data.gov.my Open API (with retry + local cache) and lands it untouched</td><td><code class="inline">bronze.drug_arrests_age_raw</code> — 540 rows</td></tr>
+    <tr><td>2. Stage</td><td>dbt (model)</td><td>Casts types and renames columns only — no business logic</td><td><code class="inline">main_silver.stg_drug_arrests_age</code> (view)</td></tr>
+    <tr><td>3. Marts</td><td>dbt (models)</td><td>Builds a star schema: 2 dimension tables + 1 fact table with surrogate keys</td><td><code class="inline">main_gold.*</code> (tables)</td></tr>
+    <tr><td>4. Validate</td><td>dbt test</td><td>19 data-quality tests (not_null / unique on keys)</td><td>19/19 PASS</td></tr>
+    <tr><td>5. Consume</td><td>Flask + DuckDB</td><td>Browser SQL editor to query the warehouse and view live data</td><td>localhost:5000</td></tr>
+  </table>
+</div>
+
+<!-- ============ 2. TECH STACK ============ -->
+<h2><span class="num">2</span> Tech Stack</h2>
+<p class="subtitle">Every tool is free, open-source, and requires no account or credit card</p>
+<div class="grid">
+  <div class="card"><span class="tag t-amber">DATA SOURCE</span><h4>data.gov.my Open API</h4><p>Malaysian government open-data portal. Returns JSON (API) or Parquet. No authentication key required.</p></div>
+  <div class="card"><span class="tag t-green">STORAGE + COMPUTE</span><h4>DuckDB</h4><p>Embedded analytical database — no server to install or manage. Reads JSON/Parquet natively, runs SQL directly on files.</p></div>
+  <div class="card"><span class="tag t-blue">TRANSFORMATION</span><h4>dbt-core + dbt-duckdb</h4><p>Industry-standard transformation tool. Gives medallion structure, dependency-aware builds, lineage docs, and data tests — the parts that make a project look production-grade.</p></div>
+  <div class="card"><span class="tag t-violet">INGEST + UI</span><h4>Python + Flask</h4><p>Python script for the bronze ingest; a small Flask app serves a browser-based SQL editor to query the warehouse and view results.</p></div>
+  <div class="card"><span class="tag t-blue">VERSION CONTROL</span><h4>Git + GitHub</h4><p>Standard practice — public repo doubles as portfolio evidence with README, screenshots, and lineage graph.</p></div>
+  <div class="card"><span class="tag t-amber">DEMO / DOCS</span><h4>dbt docs + scripts</h4><p><code class="inline">dbt docs serve</code> generates an interactive lineage graph; <code class="inline">demo.sh</code> rebuilds the whole pipeline from scratch in ~30 seconds.</p></div>
+</div>
+
+<!-- ============ 3. SETUP ============ -->
+<h2><span class="num">3</span> Step-by-Step Setup</h2>
+<p class="subtitle">Exact commands used to build this project from zero</p>
+
+<ol class="steps">
+  <li>
+    <h4>Create the project and install dependencies</h4>
+    <p class="desc">A virtual environment keeps everything isolated. dbt-duckdb brings the DuckDB adapter into dbt.</p>
+    <div class="code"><span class="lang">bash</span><button class="copy" data-target="s1">Copy</button><pre id="s1">mkdir drug-arrests-warehouse && cd drug-arrests-warehouse
+git init -b main
+python3 -m venv venv && source venv/bin/activate
+pip install dbt-core dbt-duckdb duckdb pandas flask</pre></div>
+  </li>
+  <li>
+    <h4>Initialise the dbt project</h4>
+    <p class="desc">Scaffolds <code class="inline">dbt_project.yml</code> and the model folders. Pick the <b>duckdb</b> adapter when prompted. If the interactive prompt fails in automation, create the profile manually (next step).</p>
+    <div class="code"><span class="lang">bash</span><button class="copy" data-target="s2">Copy</button><pre id="s2">dbt init drug_arrests_dw   # choose: duckdb</pre></div>
+  </li>
+  <li>
+    <h4>Point dbt at the DuckDB file (profiles.yml)</h4>
+    <p class="desc">dbt needs a profile in <code class="inline">~/.dbt/profiles.yml</code> telling it where the database lives.</p>
+    <div class="code"><span class="lang">yaml</span><button class="copy" data-target="s3">Copy</button><pre id="s3"># ~/.dbt/profiles.yml
+drug_arrests_dw:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: /absolute/path/to/drug-arrests-warehouse/drug_arrests_dw/drug_arrests_dw.duckdb</pre></div>
+  </li>
+  <li>
+    <h4>Configure the dbt project</h4>
+    <p class="desc">Assign schemas per layer: silver for staging, gold for marts. Remove the scaffolded example model.</p>
+    <div class="code"><span class="lang">yaml</span><button class="copy" data-target="s4">Copy</button><pre id="s4"># drug_arrests_dw/dbt_project.yml (models section)
+models:
+  drug_arrests_dw:
+    staging:
+      +schema: silver
+      +materialized: view
+    marts:
+      +schema: gold
+      +materialized: table</pre></div>
+  </li>
+  <li>
+    <h4>Bronze — ingest raw data</h4>
+    <p class="desc">Fetches the full dataset from the API and lands it as-is in the <code class="inline">bronze</code> schema. Never transform at this layer. (No <code class="inline">limit</code> parameter — the complete dataset is only 540 rows.)</p>
+    <div class="code"><span class="lang">bash</span><button class="copy" data-target="s5">Copy</button><pre id="s5">python drug_arrests_dw/scripts/ingest.py
+# -> Loaded 540 rows into bronze.drug_arrests_age_raw</pre></div>
+  </li>
+  <li>
+    <h4>Silver — staging model</h4>
+    <p class="desc">A view that only casts types and renames columns. Declare the bronze table as a dbt <em>source</em>.</p>
+    <div class="code"><span class="lang">sql</span><button class="copy" data-target="s6">Copy</button><pre id="s6">-- models/staging/stg_drug_arrests_age.sql
+with source as (
+    select * from {{ source('bronze', 'drug_arrests_age_raw') }}
+),
+renamed as (
+    select
+        cast(date as date)          as arrest_date,
+        age,
+        sex,
+        arrest_type,
+        cast(drug_arrests as integer) as drug_arrest_count
+    from source
+    where drug_arrests is not null
+)
+select * from renamed</pre></div>
+  </li>
+  <li>
+    <h4>Gold — star schema marts</h4>
+    <p class="desc">Two dimensions (state, sex) and one fact table, keyed by deterministic keys.</p>
+    <div class="code"><span class="lang">sql</span><button class="copy" data-target="s7">Copy</button><pre id="s7">-- models/marts/dim_age_group.sql   (9 groups incl. 'all' & 'no_information')
+select distinct
+    age as age_group_key,
+    age as age_group
+from {{ ref('stg_drug_arrests_age') }}
+
+-- models/marts/dim_sex.sql       (3 rows: both / male / female, same pattern)
+-- models/marts/dim_arrest_type.sql (4 types: overall / posses / supply / urine_positive)
+-- models/marts/fact_drug_arrests.sql (age_group_key, sex_key, arrest_type_key, arrest_date, drug_arrest_count)</pre></div>
+  </li>
+  <li>
+    <h4>Tests + documentation</h4>
+    <p class="desc">Declare not_null/unique tests in <code class="inline">models/marts/schema.yml</code>, then run the pipeline and generate lineage docs.</p>
+    <div class="code"><span class="lang">bash</span><button class="copy" data-target="s8">Copy</button><pre id="s8">cd drug_arrests_dw
+dbt run              # build silver + gold
+dbt test             # 19 data tests -> PASS=19
+dbt docs generate
+dbt docs serve       # interactive lineage graph at localhost:8080</pre></div>
+  </li>
+  <li>
+    <h4>Web UI — query and view data in the browser</h4>
+    <p class="desc">Read-only SQL editor. Supports dbt Jinja (<code class="inline">source()</code>, <code class="inline">ref()</code>, <code class="inline">config()</code>) by translating it before execution.</p>
+    <div class="code"><span class="lang">bash</span><button class="copy" data-target="s9">Copy</button><pre id="s9">python drug_arrests_dw/scripts/app.py
+# -> open http://localhost:5000</pre></div>
+  </li>
+  <li>
+    <h4>Commit and publish</h4>
+    <p class="desc">Commit code (never the database or virtualenv — see <code class="inline">.gitignore</code>) and push to GitHub.</p>
+    <div class="code"><span class="lang">bash</span><button class="copy" data-target="s10">Copy</button><pre id="s10">git add .
+git commit -m "Drug arrests medallion warehouse - bronze/silver/gold with dbt + DuckDB"
+git remote add origin https://github.com/&lt;you&gt;/&lt;repo&gt;.git
+git push -u origin main</pre></div>
+  </li>
+</ol>
+
+<!-- ============ 4. USAGE / DEMO ============ -->
+<h2><span class="num">4</span> Usage &amp; Live Demo Flow</h2>
+<p class="subtitle">How to present this project (and how to use it day-to-day)</p>
+
+<h3>4.1 One-command rebuild — perfect for interviews</h3>
+<p>Wipes the database and rebuilds the entire pipeline from scratch: ingest → dbt run → dbt test → live query.</p>
+<div class="code"><span class="lang">bash</span><button class="copy" data-target="d1">Copy</button><pre id="d1">bash scripts/demo.sh
+# STEP 1/4 BRONZE   -> Loaded 540 rows
+# STEP 2/4 dbt run  -> PASS=4 models
+# STEP 3/4 dbt test -> PASS=16 tests
+# STEP 4/4 QUERY    -> top 7 age groups by arrests</pre></div>
+
+<h3>4.2 Web UI (localhost:5000)</h3>
+<ul class="tight">
+  <li>Opens pre-loaded with a live query — data is visible immediately.</li>
+  <li>Left panel: <b>Custom query</b> box (empty, type anything), <b>Example queries</b> (one-click chips), <b>Tables</b> list.</li>
+  <li>Right panel: SQL editor + results table, with row count and timing.</li>
+  <li>Read-only enforced: only SELECT / WITH / SHOW / DESCRIBE queries are accepted.</li>
+</ul>
+
+<h3>4.3 Inspect data from the terminal</h3>
+<div class="code"><span class="lang">bash</span><button class="copy" data-target="d2">Copy</button><pre id="d2">python drug_arrests_dw/scripts/view_data.py
+# prints sample rows from bronze, silver, gold + counts + top insights</pre></div>
+
+<h3>4.4 Example analytical queries</h3>
+<div class="code"><span class="lang">sql</span><button class="copy" data-target="d3">Copy</button><pre id="d3">-- Top age groups (2019-2023): 14-18: 284,802 | >41: 213,457 | 35-40: 152,084
+select a.age_group, sum(f.drug_arrest_count) as total_arrests
+from main_gold.fact_drug_arrests f
+join main_gold.dim_age_group a using (age_group_key)
+where f.sex_key = 'both' and f.arrest_type_key = 'overall'
+  and f.age_group_key not in ('all', 'no_information')
+group by a.age_group order by total_arrests desc limit 7;
+
+-- National trend by year (2019: 47,952 -> 2022: 163,697 -> 2023: 179,799)
+select f.arrest_date, sum(f.drug_arrest_count) as total_arrests
+from main_gold.fact_drug_arrests f
+where f.sex_key = 'both' and f.age_group_key = 'all' and f.arrest_type_key = 'overall'
+group by f.arrest_date order by f.arrest_date;</pre></div>
+
+<div class="note ok"><b>Interview tip:</b> run <code class="inline">bash scripts/demo.sh</code> once before the session so the API cache is warm, then run it live on screen — it completes in ~30 seconds and is resilient even if the API is down.</div>
+
+<!-- ============ 5. LAYER-BY-LAYER ============ -->
+<h2><span class="num">5</span> Data Flow Layer by Layer</h2>
+<p class="subtitle">The medallion architecture in this project</p>
+
+<div class="card">
+  <table>
+    <tr><th>Layer</th><th>Schema</th><th>Files</th><th>Principle</th></tr>
+    <tr>
+      <td><b>Bronze</b></td><td><code class="inline">bronze</code></td>
+      <td><code class="inline">scripts/ingest.py</code></td>
+      <td>Raw data landed as-is. No transformation, no cleanup — a faithful copy of the source for auditing.</td>
+    </tr>
+    <tr>
+      <td><b>Silver</b></td><td><code class="inline">main_silver</code></td>
+      <td><code class="inline">models/staging/stg_drug_arrests_age.sql</code>, <code class="inline">sources.yml</code></td>
+      <td>Type casting + column renaming only. Deterministic, business-free cleaning.</td>
+    </tr>
+    <tr>
+      <td><b>Gold</b></td><td><code class="inline">main_gold</code></td>
+      <td><code class="inline">models/marts/dim_age_group.sql</code>, <code class="inline">dim_sex.sql</code>, <code class="inline">dim_arrest_type.sql</code>, <code class="inline">fact_drug_arrests.sql</code>, <code class="inline">schema.yml</code></td>
+      <td>Star schema for analytics: dimensions give context, fact holds measures. Keys are natural values (age group, sex, arrest type) — deterministic by construction, so they survive re-runs.</td>
+    </tr>
+  </table>
+</div>
+
+<div class="note"><b>Data quality caveat:</b> the source records <em>annual</em> counts (dated 1 January). <code class="inline">sex = 'both'</code>, <code class="inline">age = 'all'</code> and <code class="inline">arrest_type = 'overall'</code> are totals across their dimensions; <code class="inline">age = 'no_information'</code> holds unknown ages. 2022-23 figures jump ~3.6x — likely a reporting change, not an arrest surge. Documenting caveats like this signals data-literacy.</div>
+
+<!-- ============ 6. TROUBLESHOOTING ============ -->
+<h2><span class="num">6</span> Troubleshooting &amp; Lessons Learnt</h2>
+<p class="subtitle">Real issues hit while building this project, and how they were solved</p>
+
+<div class="card">
+  <h3><span class="pill y">API</span>HTTP 429 — rate limited</h3>
+  <p class="desc" style="color:var(--muted)">Repeated calls to data.gov.my trigger rate limiting. <b>Fix:</b> the ingest script retries with exponential backoff and caches the last successful response locally (<code class="inline">.drug_arrests_age_cache.json</code>), falling back to cache when the API is unavailable.</p>
+
+  <h3><span class="pill r">DUCKDB</span><code>read_json_auto('[{...}]')</code> fails with "No files found"</h3>
+  <p class="desc" style="color:var(--muted)">Passing an inline JSON string to <code class="inline">read_json_auto</code> is treated as a file-path glob. <b>Fix:</b> write the JSON to a cache file first, then <code class="inline">read_json_auto('/path/cache.json')</code>.</p>
+
+  <h3><span class="pill r">WEB UI</span>Parser error: syntax error at or near "{"</h3>
+  <p class="desc" style="color:var(--muted)">Pasting dbt model SQL (<code class="inline">{{ source(...) }}</code>) into the plain-DuckDB editor fails. <b>Fix:</b> the app translates dbt Jinja before execution — <code class="inline">source('a','b')</code> → <code class="inline">a.b</code>, <code class="inline">ref('fact_drug_arrests')</code> → <code class="inline">main_gold.fact_drug_arrests</code>, <code class="inline">config(...)</code> → removed.</p>
+
+  <h3><span class="pill r">DB PATH</span>dbt run fails: schema not found / wrong database file</h3>
+  <p class="desc" style="color:var(--muted)">Relative paths create the DuckDB file in the wrong folder. <b>Fix:</b> derive the project directory from the script location (<code class="inline">os.path.dirname(__file__)</code>), so commands work from any working directory.</p>
+
+  <h3><span class="pill r">DBT</span><code>dbt init</code> aborts in automation</h3>
+  <p class="desc" style="color:var(--muted)">The interactive adapter prompt fails when piped. <b>Fix:</b> create <code class="inline">~/.dbt/profiles.yml</code> manually (section 3.3) — dbt reads it on next run.</p>
+</div>
+
+<!-- ============ 7. REUSABLE PLAYBOOK ============ -->
+<h2><span class="num">7</span> Reusable Playbook — Rebuild This for Any Dataset</h2>
+<p class="subtitle">The same architecture, copied to a new dataset in under 30 minutes</p>
+
+<h3>7.1 The recipe (generic)</h3>
+<ol class="steps">
+  <li>
+    <h4>Find a dataset</h4>
+    <p class="desc">Any source that can be read as JSON/CSV/Parquet: data.gov.my catalogue, Kaggle export, your own CSV, etc. Note the <b>schema</b> (column names and types) and any <b>identifier</b> (e.g. catalogue ID or file URL).</p>
+  </li>
+  <li>
+    <h4>Point the ingest script at it</h4>
+    <p class="desc">Copy <code class="inline">scripts/ingest.py</code>; replace <code class="inline">API_URL</code> with your source URL (or load from a local file). The bronze table name can stay generic (<code class="inline">bronze.raw_table</code>).</p>
+  </li>
+  <li>
+    <h4>Write the staging model</h4>
+    <p class="desc">Copy <code class="inline">stg_drug_arrests_age.sql</code>; update the <code class="inline">select</code> to cast your columns to clean names. Rename the model and update <code class="inline">sources.yml</code>. No business logic.</p>
+  </li>
+  <li>
+    <h4>Design dimensions + fact</h4>
+    <p class="desc">Pick the natural dimensions (e.g. geography, sex, age, category, time) and the measure(s). Build one fact + N dims with deterministic keys (concatenate columns, or use the natural key when it is already unique).</p>
+  </li>
+  <li>
+    <h4>Add tests</h4>
+    <p class="desc">In <code class="inline">schema.yml</code>: <code class="inline">not_null</code> on every key and measure, <code class="inline">unique</code> on surrogate keys. Adjust the web UI example queries in <code class="inline">app.py</code>.</p>
+  </li>
+  <li>
+    <h4>Run, document, present</h4>
+    <p class="desc"><code class="inline">dbt run</code> → <code class="inline">dbt test</code> → <code class="inline">dbt docs serve</code> → update README + this summary with your new dataset name.</p>
+  </li>
+</ol>
+
+<h3>7.2 Change map — what to edit, and where</h3>
+<div class="card">
+  <table>
+    <tr><th>Component</th><th>File</th><th>What to change for a new dataset</th></tr>
+    <tr><td>Source URL / ID</td><td><code class="inline">drug_arrests_dw/scripts/ingest.py</code></td><td><code class="inline">API_URL</code> constant (or path to your CSV/Parquet)</td></tr>
+    <tr><td>Raw table name</td><td><code class="inline">scripts/ingest.py</code>, <code class="inline">models/staging/sources.yml</code></td><td><code class="inline">bronze.drug_arrests_age_raw</code> → your table name (both places)</td></tr>
+    <tr><td>Column mapping / cleaning</td><td><code class="inline">models/staging/stg_drug_arrests_age.sql</code></td><td>Rewrite the <code class="inline">select</code>: cast types, rename to clean snake_case</td></tr>
+    <tr><td>Star schema design</td><td><code class="inline">models/marts/*.sql</code></td><td>New dims + fact; update surrogate key expressions</td></tr>
+    <tr><td>Tests</td><td><code class="inline">models/marts/schema.yml</code></td><td>New column names; keep not_null + unique on keys</td></tr>
+    <tr><td>Project name/profile</td><td><code class="inline">dbt_project.yml</code>, <code class="inline">~/.dbt/profiles.yml</code></td><td>Project name, schema mapping (silver/gold)</td></tr>
+    <tr><td>Example queries + UI</td><td><code class="inline">drug_arrests_dw/scripts/app.py</code></td><td><code class="inline">EXAMPLE_QUERIES</code> list and the default landing query</td></tr>
+    <tr><td>Docs / demo</td><td><code class="inline">README.md</code>, <code class="inline">scripts/demo.sh</code>, this file</td><td>Dataset name, insights, screenshots</td></tr>
+  </table>
+</div>
+
+<h3>7.3 Design principles to keep (they generalise)</h3>
+<ul class="tight">
+  <li><b>Bronze is sacred</b> — keep a byte-faithful copy of the source. You can always re-derive everything downstream from it.</li>
+  <li><b>One job per layer</b> — cleaning in silver, business logic in gold. Never mix them.</li>
+  <li><b>Deterministic keys</b> — string-concatenation surrogate keys survive re-runs and make the pipeline idempotent.</li>
+  <li><b>Tests are part of the deliverable</b> — not_null/unique on every key is cheap and makes the demo credible.</li>
+  <li><b>Everything free and reproducible</b> — if the reviewer asks "can I run this?", the answer is always yes.</li>
+</ul>
+
+<div class="note ok"><b>Bottom line:</b> the pipeline is 10 files. The data changes; the architecture does not.</div>
+
+</div>
+
+<footer>Technical Summary — Drug Arrests by Sex &amp; Age Data Warehouse · dbt + DuckDB medallion architecture · Generated for the SPRM capstone interview</footer>
+
+<script>
+  document.querySelectorAll('.copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = document.getElementById(btn.getAttribute('data-target'));
+      var text = pre.innerText;
+      var done = function () {
+        btn.textContent = 'Copied'; btn.classList.add('done');
+        setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+      } else { fallback(); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta); done();
+      }
+    });
+  });
+</script>
+</body>
+</html>

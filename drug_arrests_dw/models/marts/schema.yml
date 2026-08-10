@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: stg_drug_arrests_age
+    description: "Cleaned staging model — types cast and columns renamed, no business logic."
+    columns:
+      - name: arrest_date
+        tests: [not_null]
+      - name: age
+        tests: [not_null]
+      - name: sex
+        tests: [not_null]
+      - name: arrest_type
+        tests: [not_null]
+      - name: drug_arrest_count
+        tests: [not_null]
+
+  - name: dim_age_group
+    description: "Dimension of age groups (including totals 'all' and 'no_information')."
+    columns:
+      - name: age_group_key
+        tests: [not_null, unique]
+      - name: age_group
+        tests: [not_null]
+
+  - name: dim_sex
+    description: "Dimension of sex groupings (both / male / female)."
+    columns:
+      - name: sex_key
+        tests: [not_null, unique]
+      - name: sex
+        tests: [not_null]
+
+  - name: dim_arrest_type
+    description: "Dimension of arrest types (overall / posses / supply / urine_positive)."
+    columns:
+      - name: arrest_type_key
+        tests: [not_null, unique]
+      - name: arrest_type
+        tests: [not_null]
+
+  - name: fact_drug_arrests
+    description: "Fact table — drug arrest counts per age group, sex and arrest type per year."
+    columns:
+      - name: age_group_key
+        tests: [not_null]
+      - name: sex_key
+        tests: [not_null]
+      - name: arrest_type_key
+        tests: [not_null]
+      - name: arrest_date
+        tests: [not_null]
+      - name: drug_arrest_count
+        tests: [not_null]

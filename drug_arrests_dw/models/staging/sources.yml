@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    description: "Raw data from data.gov.my (Drug Arrests by Sex & Age). Landed as-is by scripts/ingest.py"
+    tables:
+      - name: drug_arrests_age_raw
+        description: "Raw drug arrest counts per age group, sex, arrest type and date. NOTE: annual counts (dated 1 Jan); 'all' age and 'overall' arrest type are totals; 'no_information' = unknown age."
